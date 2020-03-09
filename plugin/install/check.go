@@ -109,6 +109,7 @@ func checkGaugeUpdate() []UpdateInfo {
 	if isLatestVersion {
 		updateInfos = append(updateInfos, UpdateInfo{"Gauge", latestVersion.String(), "Download the installer from https://gauge.org/get-started/"})
 	}
+
 	return updateInfos
 }
 

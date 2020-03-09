@@ -41,9 +41,10 @@ import (
 )
 
 const (
-	pluginJSON = "plugin.json"
-	jsonExt    = ".json"
-	x86        = "386"
+	pluginJSON        = "plugin.json"
+	jsonExt           = ".json"
+	x86               = "386"
+	gaugeDownloadTmpl = "https://github.com/getgauge/gauge/releases/download/v%s/gauge-%s-%s.%s.zip"
 )
 
 type installDescription struct {
@@ -663,4 +664,35 @@ func AddPluginToProject(pluginName string) error {
 	}
 	logger.Infof(true, "Plugin %s was successfully added to the project\n", pluginName)
 	return nil
+}
+
+func UpdateGauge() {
+	info := checkGaugeUpdate()
+	if len(info) < 1 {
+		return
+	}
+	v := info[0].CompatibleVersion
+	downloadUrl := fmt.Sprintf(gaugeDownloadTmpl, v, v, runtime.GOOS, getPackageArchSuffix())
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+	tempDir := common.GetTempDir()
+	defer func() {
+		err := common.Remove(tempDir)
+		if err != nil {
+			logger.Errorf(false, "unable to remove temp directory: %s", err.Error())
+		}
+	}()
+	gaugeZip, _ := util.Download(downloadUrl, tempDir, "", false)
+	_, e := common.UnzipArchive(gaugeZip, exPath)
+	fmt.Println(d, e)
+}
+
+func getPackageArchSuffix() string {
+	if runtime.GOARCH == `amd64` {
+		return "x86_64"
+	}
+	return "x86"
 }

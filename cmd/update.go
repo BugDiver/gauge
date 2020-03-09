@@ -33,26 +33,31 @@ var (
   gauge update -a
   gauge update -c`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if all {
+			switch true {
+			case all:
 				install.UpdatePlugins(machineReadable)
-				return
-			} else if check {
+			case check:
 				install.PrintUpdateInfoWithDetails()
-				return
+			case self:
+				install.UpdateGauge()
+			default:
+				if len(args) < 1 {
+					exit(fmt.Errorf("missing argument <plugin name>"), cmd.UsageString())
+				}
+				install.HandleUpdateResult(install.Plugin(args[0], pVersion, machineReadable), args[0], true)
 			}
-			if len(args) < 1 {
-				exit(fmt.Errorf("missing argument <plugin name>"), cmd.UsageString())
-			}
-			install.HandleUpdateResult(install.Plugin(args[0], pVersion, machineReadable), args[0], true)
+
 		},
 		DisableAutoGenTag: true,
 	}
 	all   bool
 	check bool
+	self  bool
 )
 
 func init() {
 	GaugeCmd.AddCommand(updateCmd)
 	updateCmd.Flags().BoolVarP(&all, "all", "a", false, "Updates all the installed Gauge plugins")
 	updateCmd.Flags().BoolVarP(&check, "check", "c", false, "Checks for Gauge and plugins updates")
+	updateCmd.Flags().BoolVarP(&self, "self", "s", false, "Update the gauge binray itself")
 }
